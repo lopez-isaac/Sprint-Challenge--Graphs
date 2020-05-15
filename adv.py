@@ -12,14 +12,15 @@ world = World()
 
 
 # You may uncomment the smaller graphs for development and testing purposes.
-map_file = "maps/test_line.txt"
+# map_file = "maps/test_line.txt"
 # map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
 # map_file = "maps/test_loop_fork.txt"
-# map_file = "maps/main_maze.txt"
+map_file = "maps/main_maze.txt"
 
 # Loads the map into a dictionary
 room_graph=literal_eval(open(map_file, "r").read())
+print(len(room_graph))
 world.load_graph(room_graph)
 
 # Print an ASCII map
@@ -32,28 +33,39 @@ player = Player(world.starting_room)
 traversal_path = []
 visited = {}
 backtrack = []
-retrace = {"n":"s", "s":"n", "w":"e", "e":"w"}
+reverse_d = {"n": "s", "s": "n", "e": "w", "w": "e"}
+#add first entry to counter error
 visited[0] = player.current_room.get_exits()
+#print(visited[0])
 #
 #stack = Stack()
 #stack.push(player.current_room.id)
 
+#run until every room is visited
 while len(visited) != len(room_graph)-1:
 
 
     if player.current_room.id not in visited:
+        #log the exit values to the key aka unvisited room direction
         visited[player.current_room.id] = player.current_room.get_exits()
+        #don't need the direction from the room we came from because it been visited
+        visited[player.current_room.id].remove(backtrack[-1])
 
-    #dead end reach, go back a room until a room connections is reached
-    #while len(visited[player.current_room.id]) == 0:
+    #dead end reach, go back a room until a room with connections is reached
+    #if in a "hallway" keep going back
+    #check dictionary key,value if there are rooms to visit
+    while len(visited[player.current_room.id]) == 0:
+        goback = backtrack.pop()
+        player.travel(goback)
+        traversal_path.append(goback)
 
 
+    #get the last direction from the path
+    not_visited_direction = visited[player.current_room.id].pop()
+    traversal_path.append(not_visited_direction)
+    backtrack.append(reverse_d[not_visited_direction])
+    player.travel(not_visited_direction)
 
-    directions = player.current_room.get_exits()
-    for direction in directions:
-        traversal_path.append(direction)
-        #backtrack.append(retrace[direction])
-        player.travel(direction)
 
 
 
